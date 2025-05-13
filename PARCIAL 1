@@ -1,0 +1,67 @@
+from machine import mem32
+import uctypes
+import array
+
+def escalar_por_vector(factor, vector, dir_base): #FUNCION PARA MULTIPLICAR ESCALAR POR VECTOR
+    resultado = []
+    for i in range(len(vector)): 
+        val = mem32[dir_base + i * 4]#OBTENGO EL VALOR EN LA DIRECCION BASE  
+        resultado.append(val * factor)
+    return resultado #DEVUELVE LA LISTA 
+
+def suma_vectores(a, b, c, d): #SUMA DE VECTORES
+    resultado = []
+    longitud = len(a)
+    for i in range(longitud):
+        suma = a[i]
+        suma += b[i]
+        suma += c[i]
+        suma += d[i]
+        resultado.append(suma)
+    return resultado
+
+def curva_bezier(p2, p3, p4, n, p1): 
+    LR = [] #VECTOR DE SLIDA
+
+    # ASIGNACION MANUAL DE LAS DIRECCIONES
+    dir1 = 0x20000000  
+    dir2 = 0x20000010  
+    dir3 = 0x20000020  
+    dir4 = 0x20000030  
+
+
+    for i in range(n + 1):
+        t = i / n
+        #CALCULOS LOS ESCALARES QUE MULTIPLICAN A LOS VENTORES
+        b0 = (1 - t) ** 3
+        b1 = 3 * ((1 - t) ** 2) * t
+        b2 = 3 * (1 - t) * (t ** 2)
+        b3 = t ** 3
+        #MULTIPLICO VECOTR POR ESCALAR SEGUN LA FUNCION
+        v0 = escalar_por_vector(b0, p1, dir1)
+        v1 = escalar_por_vector(b1, p2, dir2)
+        v2 = escalar_por_vector(b2, p3, dir3)
+        v3 = escalar_por_vector(b3, p4, dir4)
+        #REALIZO LA SUMA QUE SE INDICA PARA OBTENER EL PUNTO
+        punto = suma_vectores(v0, v1, v2, v3)
+        LR.append(punto)
+
+    return LR #RETORNO LR COMO LISTA 
+
+# DEFINO LOS DATOS DE ENTRADA
+p1 = array.array('i', [3, 2])  
+p2 = array.array('i', [2, 3])
+p3 = array.array('i', [3, 4])
+p4 = array.array('i', [4, 5])
+n = 4
+
+
+
+#LLAMO LA FUNCION
+lista_puntos = curva_bezier(p2, p3, p4, n, p1)
+contador = 1
+for punto in lista_puntos:
+    # CONVIERTO CADA CORDENADA A FLOAT Y LO IMPRIMO
+    coordenadas_redondeadas = [round(float(x), 3) for x in punto]
+    print("Punto", contador, ":", coordenadas_redondeadas)
+    contador += 1
